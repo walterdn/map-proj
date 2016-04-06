@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html ng-app="MapApp">
+<head>
+    <meta charset="UTF-8">
+    <title>Map App</title>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
+    <style>
+		#map {
+			height: 300px;
+			width: 300px;
+		}
+
+    </style>    
+</head>
+<body ng-controller="MapCtrl">
+
+	<leaflet center="seattle" geojson="geojson" event-broadcast="events" defaults="defaults" id='map'>
+	</leaflet>
+
+	<button ng-click="applyBoundary()"> Apply </button>
+
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+    <script src="./directives/angular-leaflet-directive.js"></script>
+    <script src="./js/mapCtrl.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "map-project",
+  "version": "1.0.0",
+  "engines": {
+    "node": "0.12.7"
+  },
+  "description": "description goes here",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.13.3",
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "Walter Nicholas",
+  "license": "ISC"
+}
