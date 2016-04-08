@@ -55,6 +55,10 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
     angular.extend($scope, defaultMapSettings);
     var counter = 0;
 
+    var MAP_HEIGHT = 450;
+    var MAP_WIDTH = 800;
+
+
     var mapElement = document.getElementById('map');
     
     // document.body.addEventListener('touchstart', function(e){ e.preventDefault(); });
@@ -73,22 +77,42 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
     //     logmouseup();
     // });
 
-    // mapElement.addEventListener('click', logclick);
+    mapElement.addEventListener('touchstart', function(e) {
+        $scope.logs.unshift('touch start detected');
+        $scope.$apply();
+    }); 
+
+    mapElement.addEventListener('touchend', function(e) {
+        $scope.logs.unshift('touch end detected');
+        $scope.$apply();
+    });
+
+
+
+
     mapElement.addEventListener('touchmove', function(e) {
         // logclick();
 
-        // console.log(e);
+        console.log(e);
 
-        var x = e.touches[0].clientX;
-        var y = e.touches[0].clientY;
+        var x = Math.floor(Number(e.touches[0].clientX));
+        var y = Math.floor(Number(e.touches[0].clientY));
 
         var coordinates = x + ', ' + y;
 
-        $scope.logs.unshift(coordinates);
+        if (x < 0 || x > MAP_WIDTH || y < 0 || y > MAP_HEIGHT) return;
 
+        $scope.logs.unshift(coordinates);
         $scope.$apply();
 
+        // if (x < MAP_WIDTH && y < MAP_HEIGHT) {
+        // }
+
         e.preventDefault();
+
+
+        // if (x > MAP_WIDTH || y > MAP_HEIGHT) return;
+
     });
 
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
