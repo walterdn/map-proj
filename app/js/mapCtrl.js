@@ -52,14 +52,11 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
     angular.extend($scope, defaultMapSettings);
 
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
-
     // $scope.$on("leafletDirectiveMap.map.mousemove", drawBoundary);
-    
-    $scope.$on("leafletDirectiveMap.map.mousedown", addBoundaryPoint);
-
     // $scope.$on("leafletDirectiveMap.map.mouseup", endDrawing);
 
-
+    $scope.$on("leafletDirectiveMap.map.mousedown", addBoundaryPoint);
+    
 
     $scope.startBoundary = function() {
         startDrawing();
