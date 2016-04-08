@@ -144,6 +144,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
     // $scope.$on("leafletDirectiveMap.map.click", addBoundaryPoint);
     
     $scope.startBoundary = function() {
+        $scope.defaults.dragging = false;
         startDrawing();
     };
 
