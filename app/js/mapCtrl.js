@@ -50,8 +50,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
             }
         },
         defaults: {
-            scrollWheelZoom: false,
-            dragging: true
+            scrollWheelZoom: false
         }
     };
 
@@ -166,29 +165,14 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of nesting than LineString format
     };
 
-    // function startDrawing() {
-    //     resetGeojson();
-    //     $scope.currentlyDrawingBoundary = true;
-    // }
-
     function endDrawing() {
         leafletData.getMap().then(function(map) {
-            map.dragging.disable();
-            map.touchZoom.disable();
-            map.doubleClickZoom.disable();
+            map.dragging.enable();
+            map.touchZoom.enable();
+            map.doubleClickZoom.enable();
         });
         $scope.currentlyDrawingBoundary = false;
     }
-
-    // function addBoundaryPoint(event, args) {
-    //     if (!$scope.currentlyDrawingBoundary) return;
-
-    //     var leafEvent = args.leafletEvent;
-    //     var coordinatePair = [leafEvent.latlng.lng, leafEvent.latlng.lat];
-
-    //     $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
-    //     $scope.$apply();
-    // }
 
     function resetGeojson() {
         var geometry = $scope.geojson.data.features[0].geometry; 
