@@ -5,22 +5,23 @@
     <title>Map App</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
     <style>
+
 		#map {
-			height: 1000px;
-			width: 800px;
+			height: 600px;
+			width: 600px;
 		}
 
         .large-buttons {
             border: 1px solid black;
             margin: 10px;
-            font-size: 7em;
+            font-size: 4em;
         }
 
     </style>    
 </head>
 <body ng-controller="MapCtrl">
 
-	<a class="large-buttons" ng-click="applyBoundary()"> Apply </a> <br>
+    <a class="large-buttons" ng-click="applyBoundary()"> Apply </a> <br>
     <a class="large-buttons" ng-click="startBoundary()" ng-if="!currentlyDrawingBoundary"> Draw Boundary </a>
     <a class="large-buttons" ng-if="currentlyDrawingBoundary"> Drawing </a>
 
@@ -28,6 +29,8 @@
 
     <leaflet center="seattle" geojson="geojson" event-broadcast="events" defaults="defaults" id='map'>
     </leaflet>
+
+    <h2 ng-repeat="log in logs track by $index"> {{log}} </h2>
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>

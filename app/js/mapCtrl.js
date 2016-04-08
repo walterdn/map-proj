@@ -43,21 +43,72 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
         },
         defaults: {
             scrollWheelZoom: false,
-            dragging: true
+            dragging: false
         }
     };
+
+    $scope.logs = [];
+    $scope.lastLog = '';
 
     $scope.currentlyDrawingBoundary = false;
 
     angular.extend($scope, defaultMapSettings);
+    var counter = 0;
+
+    var mapElement = document.getElementById('map');
+    
+    // document.body.addEventListener('touchstart', function(e){ e.preventDefault(); });
+    document.body.addEventListener('touchmove', function(e){ 
+        e.preventDefault(); 
+        logmousemove();
+    });
+
+    document.body.addEventListener('touchstart', function(e){ 
+        // e.preventDefault(); 
+        logmousedown();
+    });
+
+    document.body.addEventListener('touchend', function(e){ 
+        // e.preventDefault(); 
+        logmouseup();
+    });
+
+    // mapElement.addEventListener('click', logclick);
+    // mapElement.addEventListener('mousemove', logmousemove);
 
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
     // $scope.$on("leafletDirectiveMap.map.mousemove", addBoundaryPoint);
     // $scope.$on("leafletDirectiveMap.map.mouseup", endDrawing);
+    // $scope.$on("leafletDirectiveMap.map.touchstart", startDrawing);
+    // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
+    // $scope.$on("leafletDirectiveMap.map.touchend", endDrawing);
 
-    $scope.$on("leafletDirectiveMap.map.touchstart", startDrawing);
-    $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
-    $scope.$on("leafletDirectiveMap.map.touchend", endDrawing);
+    // $scope.$on("leafletDirectiveMap.map.touchstart", logmousedown);
+    // $scope.$on("leafletDirectiveMap.map.touchmove", logmousemove);
+    // $scope.$on("leafletDirectiveMap.map.touchend", logmouseup);
+    // $scope.$on("leafletDirectiveMap.map.click", logclick);
+    // $scope.$on("leafletDirectiveMap.map.touchstart", log('t start'));
+    // $scope.$on("leafletDirectiveMap.map.touchmove", log('t move'));
+    // $scope.$on("leafletDirectiveMap.map.touchend", log('t end'));
+
+    function logmousedown() {
+        $scope.logs.unshift('touch start - ' + counter);
+        counter++;
+    }   
+    function logmousemove() {
+        $scope.logs.unshift('touch move - ' + counter);
+        counter++;
+    }   
+
+    function logmouseup() {
+        $scope.logs.unshift('touch end - ' + counter);
+        counter++;
+    }
+
+    function logclick() {
+        $scope.logs.unshift('click - ' + counter);
+        counter++;
+    }
 
     // $scope.$on("leafletDirectiveMap.map.click", addBoundaryPoint);
     
