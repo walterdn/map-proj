@@ -2,13 +2,21 @@ var app = angular.module("MapApp", [
     "leaflet-directive"
 ]);
 
-app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData) {
+app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', function($scope, leafletData, leafletBoundsHelpers) {
+    
+    var bounds = leafletBoundsHelpers.createBoundsFromArray([
+        [ 47.62294, -122.3643 ], //coordinates for seattle
+        [ 47.5971, -122.29587 ]
+    ]); 
+
+
     var defaultMapSettings = {
+        bounds : bounds,
         seattle: {
-            lat: 47.61,
-            lng: -122.33,
-            zoom: 14
-        },
+            // lat: 47.61,
+            // lng: -122.33,
+            // zoom: 14
+        },        
         geojson : {
             data: {
               "type": "FeatureCollection",
@@ -53,20 +61,9 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
 
     $scope.currentlyDrawingBoundary = false;
 
-    var counter = 0;
 
     var MAP_HEIGHT = 450;
     var MAP_WIDTH = 800;
-
-    $scope.markers = new Array();
-    $scope.$on("leafletDirectiveMap.map.click", function(event, args){
-        var leafEvent = args.leafletEvent;
-        $scope.markers.push({
-            lat: leafEvent.latlng.lat,
-            lng: leafEvent.latlng.lng,
-            draggable: true
-        });
-    });
 
 
     var mapElement = document.getElementById('map');
@@ -83,7 +80,6 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
 
 
     mapElement.addEventListener('touchmove', function(e) {
-        // console.log(e);
 
         var x = Math.floor(Number(e.touches[0].clientX));
         var y = Math.floor(Number(e.touches[0].clientY));
@@ -97,7 +93,6 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
 
         $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
 
-
         $scope.logs.unshift(coordinates);
         $scope.$apply();
 
@@ -105,41 +100,31 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
     });
 
 
-
     function convertX(x) {
 
-        var startingLng = -122.3643;
-
-        var ratio = Number(x/MAP_WIDTH);
-
-        var multiplier = 0.06843;
-
-        var longitude = Number(ratio * multiplier);
-
-        var finalLongitude = startingLng + longitude;
+        var westLongBound = $scope.bounds.southWest.lng;
+        var eastLongBound = $scope.bounds.northEast.lng;
+        var longDegCurView = eastLongBound - westLongBound;
+        
+        var xRatio = x / MAP_WIDTH;
+        var longitude = xRatio * longDegCurView;
+        var finalLongitude = westLongBound + longitude;
 
         return finalLongitude;
     }
 
-
     function convertY(y) {
-        var startingLat = 47.62294;
 
-        var ratio = Number(y/MAP_HEIGHT);
+        var southLatBound = $scope.bounds.southWest.lat;
+        var northLatBound = $scope.bounds.northEast.lat;
+        var latDegCurView = northLatBound - southLatBound;
 
-        var multiplier = 0.02584;
+        var yRatio = y / MAP_HEIGHT;
+        var latitude = yRatio * latDegCurView;
+        var finalLatitude = northLatBound - latitude;
 
-        var latitude = Number(ratio * multiplier);
-
-        var finalLat = startingLat - latitude;
-
-        return finalLat;
-
-        // 450 should be 47.5971
-
-        // 0 should be 47.62294;
+        return finalLatitude;
     }
-
 
 
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
