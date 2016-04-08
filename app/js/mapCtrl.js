@@ -47,21 +47,19 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
         }
     };
 
-    var currentlyDrawingBoundary = false;
+    $scope.currentlyDrawingBoundary = false;
 
     angular.extend($scope, defaultMapSettings);
 
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
-    // $scope.$on("leafletDirectiveMap.map.mousemove", drawBoundary);
+    $scope.$on("leafletDirectiveMap.map.mousemove", addBoundaryPoint);
     // $scope.$on("leafletDirectiveMap.map.mouseup", endDrawing);
 
-    $scope.$on("leafletDirectiveMap.map.click", addBoundaryPoint);
+    // $scope.$on("leafletDirectiveMap.map.click", addBoundaryPoint);
     
-
     $scope.startBoundary = function() {
         startDrawing();
     };
-
 
     $scope.applyBoundary = function() { //changes the boundary line into a polygon
         endDrawing();
@@ -74,15 +72,15 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
 
     function startDrawing() {
         resetGeojson();
-        currentlyDrawingBoundary = true;
+        $scope.currentlyDrawingBoundary = true;
     }
 
     function endDrawing() {
-        currentlyDrawingBoundary = false;
+        $scope.currentlyDrawingBoundary = false;
     }
 
     function addBoundaryPoint(event, args) {
-        if (!currentlyDrawingBoundary) return;
+        if (!$scope.currentlyDrawingBoundary) return;
 
         var leafEvent = args.leafletEvent;
         var coordinatePair = [leafEvent.latlng.lng, leafEvent.latlng.lat];

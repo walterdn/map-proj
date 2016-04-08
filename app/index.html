@@ -21,7 +21,8 @@
 <body ng-controller="MapCtrl">
 
 	<a class="large-buttons" ng-click="applyBoundary()"> Apply </a> <br>
-    <a class="large-buttons" ng-click="startBoundary()"> Draw Boundary </a>
+    <a class="large-buttons" ng-click="startBoundary()" ng-if="!currentlyDrawingBoundary"> Draw Boundary </a>
+    <a class="large-buttons" ng-if="currentlyDrawingBoundary"> Drawing </a>
 
     <br><br>
 
