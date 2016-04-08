@@ -7,14 +7,14 @@
     <style>
 
 		#map {
-			height: 600px;
-			width: 600px;
+			height: 450px;
+			width: 800px;
 		}
 
         .large-buttons {
             border: 1px solid black;
             margin: 10px;
-            font-size: 4em;
+            font-size: 3em;
         }
 
     </style>    
@@ -30,7 +30,7 @@
     <leaflet center="seattle" geojson="geojson" event-broadcast="events" defaults="defaults" id='map'>
     </leaflet>
 
-    <h2 ng-repeat="log in logs track by $index"> {{log}} </h2>
+    <h3 ng-repeat="log in logs track by $index"> {{log}} </h3>
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
