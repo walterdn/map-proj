@@ -43,7 +43,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
         },
         defaults: {
             scrollWheelZoom: false,
-            dragging: false
+            dragging: true
         }
     };
 
@@ -58,29 +58,41 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
     var mapElement = document.getElementById('map');
     
     // document.body.addEventListener('touchstart', function(e){ e.preventDefault(); });
-    document.body.addEventListener('touchmove', function(e){ 
-        e.preventDefault(); 
-        logmousemove();
-    });
+    // document.body.addEventListener('touchmove', function(e){ 
+    //     // e.preventDefault(); 
+    //     logmousemove();
+    // });
 
-    document.body.addEventListener('touchstart', function(e){ 
-        // e.preventDefault(); 
-        logmousedown();
-    });
+    // document.body.addEventListener('touchstart', function(e){ 
+    //     // e.preventDefault(); 
+    //     logmousedown();
+    // });
 
-    document.body.addEventListener('touchend', function(e){ 
-        // e.preventDefault(); 
-        logmouseup();
-    });
+    // document.body.addEventListener('touchend', function(e){ 
+    //     // e.preventDefault(); 
+    //     logmouseup();
+    // });
 
     // mapElement.addEventListener('click', logclick);
     mapElement.addEventListener('touchmove', function(e) {
+        // logclick();
+
+        // console.log(e);
+
+        var x = e.touches[0].clientX;
+        var y = e.touches[0].clientY;
+
+        var coordinates = x + ', ' + y;
+
+        $scope.logs.unshift(coordinates);
+
+        $scope.$apply();
+
         e.preventDefault();
-        logclick();
     });
 
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
-    $scope.$on("leafletDirectiveMap.map.mousemove", addBoundaryPoint);
+    // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
     // $scope.$on("leafletDirectiveMap.map.mouseup", endDrawing);
     // $scope.$on("leafletDirectiveMap.map.touchstart", startDrawing);
     // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
@@ -144,6 +156,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
         var coordinatePair = [leafEvent.latlng.lng, leafEvent.latlng.lat];
 
         $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
+        $scope.$apply();
     }
 
     function resetGeojson() {
