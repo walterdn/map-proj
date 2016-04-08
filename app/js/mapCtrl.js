@@ -51,7 +51,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         },
         defaults: {
             scrollWheelZoom: false,
-            dragging: false
+            dragging: true
         }
     };
 
@@ -81,24 +81,25 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
     mapElement.addEventListener('touchmove', function(e) {
 
-        var x = Math.floor(Number(e.touches[0].clientX));
-        var y = Math.floor(Number(e.touches[0].clientY));
-
-        var coordinates = convertX(x) + ', ' + convertY(y);
+        var x = Math.floor(Number(e.touches[0].pageX));
+        var y = Math.floor(Number(e.touches[0].pageY));
 
         if (x < 0 || x > MAP_WIDTH || y < 0 || y > MAP_HEIGHT) return;
+        if (!$scope.currentlyDrawingBoundary) return;
 
-
-        var coordinatePair = [convertX(x), convertY(y)];
-
-        $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
-
-        $scope.logs.unshift(coordinates);
-        $scope.$apply();
+        addBoundaryPoint(x, y);
 
         e.preventDefault();
     });
 
+    function addBoundaryPoint(x, y) {
+        var longitude = convertX(x);
+        var latitude = convertY(y);
+
+        var coordinatePair = [longitude, latitude];
+        $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
+        $scope.$apply();
+    }
 
     function convertX(x) {
 
@@ -164,15 +165,15 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         $scope.currentlyDrawingBoundary = false;
     }
 
-    function addBoundaryPoint(event, args) {
-        if (!$scope.currentlyDrawingBoundary) return;
+    // function addBoundaryPoint(event, args) {
+    //     if (!$scope.currentlyDrawingBoundary) return;
 
-        var leafEvent = args.leafletEvent;
-        var coordinatePair = [leafEvent.latlng.lng, leafEvent.latlng.lat];
+    //     var leafEvent = args.leafletEvent;
+    //     var coordinatePair = [leafEvent.latlng.lng, leafEvent.latlng.lat];
 
-        $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
-        $scope.$apply();
-    }
+    //     $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
+    //     $scope.$apply();
+    // }
 
     function resetGeojson() {
         var geometry = $scope.geojson.data.features[0].geometry; 
