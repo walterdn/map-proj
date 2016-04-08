@@ -67,16 +67,19 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
 
     var mapElement = document.getElementById('map');
-    
-    mapElement.addEventListener('touchstart', function(e) {
-        $scope.logs.unshift('touch start detected');
-        $scope.$apply();
-    }); 
 
-    mapElement.addEventListener('touchend', function(e) {
-        $scope.logs.unshift('touch end detected');
-        $scope.$apply();
-    });
+
+
+
+    // mapElement.addEventListener('touchstart', function(e) {
+    //     $scope.logs.unshift('touch start detected');
+    //     $scope.$apply();
+    // }); 
+
+    // mapElement.addEventListener('touchend', function(e) {
+    //     $scope.logs.unshift('touch end detected');
+    //     $scope.$apply();
+    // });
 
 
     mapElement.addEventListener('touchmove', function(e) {
@@ -143,26 +146,37 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
     // $scope.$on("leafletDirectiveMap.map.click", addBoundaryPoint);
     
-    $scope.startBoundary = function() {
-        $scope.defaults.dragging = false;
-        startDrawing();
+    $scope.startDrawing = function() {
+        leafletData.getMap().then(function(map) {
+            map.dragging.disable();
+            map.touchZoom.disable();
+            map.doubleClickZoom.disable();
+        });
+
+        resetGeojson();
+        $scope.currentlyDrawingBoundary = true;
     };
 
     $scope.applyBoundary = function() { //changes the boundary line into a polygon
         endDrawing();
         
         var geometry = $scope.geojson.data.features[0].geometry; 
+        
         geometry.type = "Polygon";
-        console.log(geometry.coordinates.length);
         geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of nesting than LineString format
     };
 
-    function startDrawing() {
-        resetGeojson();
-        $scope.currentlyDrawingBoundary = true;
-    }
+    // function startDrawing() {
+    //     resetGeojson();
+    //     $scope.currentlyDrawingBoundary = true;
+    // }
 
     function endDrawing() {
+        leafletData.getMap().then(function(map) {
+            map.dragging.disable();
+            map.touchZoom.disable();
+            map.doubleClickZoom.disable();
+        });
         $scope.currentlyDrawingBoundary = false;
     }
 
