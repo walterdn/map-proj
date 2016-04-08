@@ -43,7 +43,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', function($scope, leafletData
         },
         defaults: {
             scrollWheelZoom: false,
-            dragging: false
+            dragging: true
         }
     };
 
