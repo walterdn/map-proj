@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html ng-app="MapApp">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
     <title>Map App</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
     <style>
@@ -13,13 +14,14 @@
 
 		#map {
             margin: 0;
-			height: 450px;
-			width: 800px;
+			height: 400px;
+			width: 90%;
 		}
 
         .large-buttons {
+            position: relative;
+            top: 10px;
             border: 1px solid black;
-            margin: 10px;
             font-size: 2.5em;
         }
 
@@ -31,7 +33,7 @@
 </head>
 <body ng-controller="MapCtrl">
 
-    <leaflet bounds="bounds" center="seattle" geojson="geojson" event-broadcast="events" defaults="defaults" id='map'>
+    <leaflet bounds="bounds" center="center" geojson="geojson" event-broadcast="events" defaults="defaults" id='map'>
     </leaflet>
 
     <a class="large-buttons" ng-click="startDrawing()" ng-if="!currentlyDrawingBoundary"> Draw Boundary </a>

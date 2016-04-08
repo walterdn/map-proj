@@ -9,14 +9,9 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         [ 47.5971, -122.29587 ]
     ]); 
 
-
     var defaultMapSettings = {
         bounds : bounds,
-        seattle: {
-            // lat: 47.61,
-            // lng: -122.33,
-            // zoom: 14
-        },        
+        center: {},      
         geojson : {
             data: {
               "type": "FeatureCollection",
@@ -56,30 +51,13 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
     angular.extend($scope, defaultMapSettings);
 
-    $scope.logs = [];
 
     $scope.currentlyDrawingBoundary = false;
 
-
-    var MAP_HEIGHT = 450;
-    var MAP_WIDTH = 800;
-
-
     var mapElement = document.getElementById('map');
 
-
-
-
-    // mapElement.addEventListener('touchstart', function(e) {
-    //     $scope.logs.unshift('touch start detected');
-    //     $scope.$apply();
-    // }); 
-
-    // mapElement.addEventListener('touchend', function(e) {
-    //     $scope.logs.unshift('touch end detected');
-    //     $scope.$apply();
-    // });
-
+    var MAP_HEIGHT = 400;
+    var MAP_WIDTH = mapElement.offsetWidth;
 
     mapElement.addEventListener('touchmove', function(e) {
 
@@ -129,7 +107,6 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         return finalLatitude;
     }
 
-
     // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
     // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
     // $scope.$on("leafletDirectiveMap.map.mouseup", endDrawing);
@@ -137,15 +114,9 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
     // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
     // $scope.$on("leafletDirectiveMap.map.touchend", endDrawing);
 
-    // $scope.$on("leafletDirectiveMap.map.touchstart", logmousedown);
-    // $scope.$on("leafletDirectiveMap.map.touchmove", logmousemove);
-    // $scope.$on("leafletDirectiveMap.map.touchend", logmouseup);
-    // $scope.$on("leafletDirectiveMap.map.click", logclick);
-
-
-    // $scope.$on("leafletDirectiveMap.map.click", addBoundaryPoint);
-    
     $scope.startDrawing = function() {
+        MAP_WIDTH = mapElement.offsetWidth;
+
         leafletData.getMap().then(function(map) {
             map.dragging.disable();
             map.touchZoom.disable();
