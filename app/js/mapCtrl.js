@@ -12,7 +12,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
     var defaultMapSettings = {
         bounds : bounds,
         center: {},      
-        geojson : {
+        geojson : { //this geojson data will be used to draw the shape. Begins as a LineString, is converted to a Polygon when user clicks Apply
             data: {
               "type": "FeatureCollection",
               "features": [
@@ -26,7 +26,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
                 }
               ]
             },
-            style: {
+            style: { //style of the geojson LineString or Polygon
                 weight: 2,
                 opacity: .8,
                 color: 'navy',
@@ -34,7 +34,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
                 fillOpacity: .25
             }
         },
-        events: {},
+        events: {}, 
         layers: {
             baselayers: {
                 osm: {
@@ -51,38 +51,44 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
     angular.extend($scope, defaultMapSettings);
 
-
-    $scope.currentlyDrawingBoundary = false;
+    //////////// GLOBAL VARIABLES ////////////
+   
+    $scope.isDrawingEnabled = false;
+    var isMouseClickedDown = false;
 
     var mapElement = document.getElementById('map');
-
-    var MAP_HEIGHT = 400;
+    var MAP_HEIGHT = mapElement.offsetHeight;
     var MAP_WIDTH = mapElement.offsetWidth;
 
-    mapElement.addEventListener('touchmove', function(e) {
 
+    mapElement.addEventListener('touchmove', onTouchMove);
+
+    $scope.$on("leafletDirectiveMap.map.mousedown", onMouseDown);
+    $scope.$on("leafletDirectiveMap.map.mousemove", onMouseMove);
+    $scope.$on("leafletDirectiveMap.map.mouseup", onMouseUp);
+
+
+    function onTouchMove(e) {
         var x = Math.floor(Number(e.touches[0].pageX));
         var y = Math.floor(Number(e.touches[0].pageY));
 
         if (x < 0 || x > MAP_WIDTH || y < 0 || y > MAP_HEIGHT) return;
-        if (!$scope.currentlyDrawingBoundary) return;
+        if (!$scope.isDrawingEnabled) return;
 
-        addBoundaryPoint(x, y);
+        var lng = convertToLongitude(x);
+        var lat = convertToLatitude(y);
 
+        addBoundaryPoint(lng, lat);
         e.preventDefault();
-    });
-
-    function addBoundaryPoint(x, y) {
-        var longitude = convertX(x);
-        var latitude = convertY(y);
-
-        var coordinatePair = [longitude, latitude];
-        $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
-        $scope.$apply();
     }
 
-    function convertX(x) {
+    function addBoundaryPoint(lng, lat) {
+        var coordinatePair = [lng, lat];
+        $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
+        $scope.$apply(); //needs apply because it can be called from non-$scope event listener for mobile touches
+    }
 
+    function convertToLongitude(x) {
         var westLongBound = $scope.bounds.southWest.lng;
         var eastLongBound = $scope.bounds.northEast.lng;
         var longDegCurView = eastLongBound - westLongBound;
@@ -94,8 +100,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         return finalLongitude;
     }
 
-    function convertY(y) {
-
+    function convertToLatitude(y) {
         var southLatBound = $scope.bounds.southWest.lat;
         var northLatBound = $scope.bounds.northEast.lat;
         var latDegCurView = northLatBound - southLatBound;
@@ -107,15 +112,27 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         return finalLatitude;
     }
 
-    // $scope.$on("leafletDirectiveMap.map.mousedown", startDrawing);
-    // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
-    // $scope.$on("leafletDirectiveMap.map.mouseup", endDrawing);
-    // $scope.$on("leafletDirectiveMap.map.touchstart", startDrawing);
-    // $scope.$on("leafletDirectiveMap.map.touchmove", addBoundaryPoint);
-    // $scope.$on("leafletDirectiveMap.map.touchend", endDrawing);
+    function onMouseDown() {
+        if ($scope.isDrawingEnabled) isMouseClickedDown = true;
+    }
 
-    $scope.startDrawing = function() {
+    function onMouseMove(event, args) {
+        if (!($scope.isDrawingEnabled && isMouseClickedDown)) return; 
+
+        var mouseCoordinates = args.leafletEvent.latlng;
+        var lng = mouseCoordinates.lng;
+        var lat = mouseCoordinates.lat;
+
+        addBoundaryPoint(lng, lat);
+    }
+
+    function onMouseUp() {
+        isMouseClickedDown = false;
+    }
+
+    $scope.enableDrawing = function() {
         MAP_WIDTH = mapElement.offsetWidth;
+        MAP_HEIGHT = mapElement.offsetHeight;
 
         leafletData.getMap().then(function(map) {
             map.dragging.disable();
@@ -124,25 +141,25 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         });
 
         resetGeojson();
-        $scope.currentlyDrawingBoundary = true;
+        $scope.isDrawingEnabled = true;
     };
 
     $scope.applyBoundary = function() { //changes the boundary line into a polygon
-        endDrawing();
+        disableDrawing();
         
         var geometry = $scope.geojson.data.features[0].geometry; 
         
         geometry.type = "Polygon";
-        geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of nesting than LineString format
+        geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of array nesting than LineString format
     };
 
-    function endDrawing() {
+    function disableDrawing() {
         leafletData.getMap().then(function(map) {
             map.dragging.enable();
             map.touchZoom.enable();
             map.doubleClickZoom.enable();
         });
-        $scope.currentlyDrawingBoundary = false;
+        $scope.isDrawingEnabled = false;
     }
 
     function resetGeojson() {
