@@ -34,7 +34,6 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
                 fillOpacity: .25
             }
         },
-        events: {}, 
         layers: {
             baselayers: {
                 osm: {
@@ -72,8 +71,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
     function onTouchMove(e) { //gets x and y coordinates of touch move, converts them to geojson, adds geojson coordinates to boundary line
         updateCurrentMapDimensions(); //in case user has rotated screen since the last touch
 
-        var x = Math.floor(Number(e.touches[0].pageX)); //get X position of touch event relative to page
-        var y = Math.floor(Number(e.touches[0].pageY)); //get Y 
+        var x = Math.floor(e.touches[0].pageX); //get X position of touch event relative to page
+        var y = Math.floor(e.touches[0].pageY); //get Y 
 
         if (x < 0 || x > MAP_WIDTH || y < 0 || y > MAP_HEIGHT) return;
         if (!$scope.isDrawingEnabled) return;
