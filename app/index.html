@@ -29,6 +29,11 @@
             font-size: 2.1em;
         }
 
+        .logs {
+            font-size: .7em;
+            margin: 15px;
+        }
+
     </style>    
 </head>
 <body ng-controller="MapCtrl">
@@ -37,9 +42,9 @@
     </leaflet>
 
     <a class="large-buttons" ng-click="enableDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
-    <a class="large-buttons" ng-click="applyBoundary()" ng-if="isDrawingEnabled" > Apply </a>
+    <a class="large-buttons" ng-click="disableDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
 
-    <div> test </div>
+    <div class="logs" ng-repeat="log in logs"> {{log}} </div>
 
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>

@@ -15,16 +15,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         geojson : { //this geojson data will be used to draw the shape. Begins as a LineString, then converted to a Polygon when user clicks Apply
             data: {
               "type": "FeatureCollection",
-              "features": [
-                {
-                  "type": "Feature",
-                  "properties": {},
-                  "geometry": {
-                    "type": "LineString",
-                    "coordinates": []
-                  }
-                }
-              ]
+              "features": []
             },
             style: { //style of the geojson LineString or Polygon
                 weight: 2,
@@ -52,6 +43,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
     //////////// GLOBAL VARIABLES ////////////
    
+    $scope.logs = new Array();   
     $scope.isDrawingEnabled = false;
     var isMouseClickedDown = false;
 
@@ -61,7 +53,10 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
 
     //////////// EVENT LISTENERS ////////////
 
+    mapElement.addEventListener('touchstart', onMouseDown);
     mapElement.addEventListener('touchmove', onTouchMove);
+    mapElement.addEventListener('touchend', onTouchEnd);
+
     $scope.$on("leafletDirectiveMap.map.mousedown", onMouseDown);
     $scope.$on("leafletDirectiveMap.map.mousemove", onMouseMove);
     $scope.$on("leafletDirectiveMap.map.mouseup", onMouseUp);
@@ -81,20 +76,42 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         var lat = convertToLatitude(y);
 
         addBoundaryPoint(lng, lat); //add point to boundary line
+        
+        $scope.$apply(); //needs apply because it can be called from non-$scope event listener for mobile touches
         e.preventDefault(); //prevents page scrolling
+    }
+
+    function onTouchEnd(e) {
+        onMouseUp();
+        $scope.$apply();
     }
 
     function addBoundaryPoint(lng, lat) { //adds a longitude, latitude pair to the geojson
         var coordinatePair = [lng, lat];
-        $scope.geojson.data.features[0].geometry.coordinates.push(coordinatePair);
-        $scope.$apply(); //needs apply because it can be called from non-$scope event listener for mobile touches
+
+        var index = $scope.geojson.data.features.length - 1; //index of most recent feature
+
+        $scope.geojson.data.features[index].geometry.coordinates.push(coordinatePair);
     }
 
     function onMouseDown() {
-        if ($scope.isDrawingEnabled) isMouseClickedDown = true;
+        if (!$scope.isDrawingEnabled) return;
+        
+        isMouseClickedDown = true;
+
+        var feature =  {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "LineString",
+                "coordinates": []
+            }
+        };
+
+        $scope.geojson.data.features.push(feature);
     }
 
-    function onMouseMove(event, args) { //if mouse click held down and drawing enabled, then adds mouse coordiantes to geojson boundary
+    function onMouseMove(event, args) { //if mouse click held down and drawing enabled, then adds mouse coordinates to geojson boundary
         if (!($scope.isDrawingEnabled && isMouseClickedDown)) return; 
 
         var mouseCoordinates = args.leafletEvent.latlng;
@@ -105,8 +122,23 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
     }
 
     function onMouseUp() {
+        if (!($scope.isDrawingEnabled && isMouseClickedDown)) return; 
+
         isMouseClickedDown = false;
+        finishShape();
     }
+
+    function finishShape() { //converts feature from line string to polygon
+        var index = $scope.geojson.data.features.length - 1; //index of current feature
+        var geometry = $scope.geojson.data.features[index].geometry; 
+
+        geometry.type = "Polygon";
+        geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of array nesting than LineString format
+
+        $scope.logs.push(geometry.coordinates[0]);
+    }
+
+    //////////// HELPER FUNCTIONS ////////////
 
     $scope.enableDrawing = function() { //disables map panning, resets the geojson shape, and allows drawing
         leafletData.getMap().then(function(map) {
@@ -115,20 +147,19 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
             map.doubleClickZoom.disable();
         });
 
-        resetGeojson();
+        $scope.geojson.data.features = new Array(); //resets the geojson features
+        $scope.logs = new Array();
         $scope.isDrawingEnabled = true;
     };
 
-    $scope.applyBoundary = function() { //ends drawing, enables map panning, changes the geoson boundary line into a polygon
-        disableDrawing();
-        
-        var geometry = $scope.geojson.data.features[0].geometry; 
-        
-        geometry.type = "Polygon";
-        geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of array nesting than LineString format
-    };
-
-    //////////// HELPER FUNCTIONS ////////////
+    $scope.disableDrawing = function() { //disable dragging and flip boolean
+        leafletData.getMap().then(function(map) {
+            map.dragging.enable();
+            map.touchZoom.enable();
+            map.doubleClickZoom.enable();
+        });
+        $scope.isDrawingEnabled = false;
+    }
 
     function convertToLongitude(x) { //converts X position of a touchevent to longitude
         var westLongBound = $scope.bounds.southWest.lng;
@@ -152,21 +183,6 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         var finalLatitude = northLatBound - latitude;
 
         return finalLatitude;
-    }
-
-    function disableDrawing() { //disable dragging and flip boolean
-        leafletData.getMap().then(function(map) {
-            map.dragging.enable();
-            map.touchZoom.enable();
-            map.doubleClickZoom.enable();
-        });
-        $scope.isDrawingEnabled = false;
-    }
-
-    function resetGeojson() { //reset the geojson feature to an empty LineString
-        var geometry = $scope.geojson.data.features[0].geometry; 
-        geometry.type = "LineString";
-        geometry.coordinates = [];
     }
 
     function updateCurrentMapDimensions() { 
