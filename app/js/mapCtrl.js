@@ -2,7 +2,7 @@ var app = angular.module("MapApp", [
     "leaflet-directive"
 ]);
 
-app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', function($scope, leafletData, leafletBoundsHelpers) {
+app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$http', function($scope, leafletData, leafletBoundsHelpers, $http) {
     
     var startingBounds = leafletBoundsHelpers.createBoundsFromArray([
         [ 47.62294, -122.3643 ], //coordinates for seattle
@@ -32,10 +32,17 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
                     url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                     type: 'xyz'
                 }
+            },
+            overlays: {
+                clustered: {
+                    name: 'Clustered',
+                    type: 'markercluster',
+                    visible: true
+                }
             }
         },
         defaults: {
-            scrollWheelZoom: false
+            // scrollWheelZoom: false
         }
     };
 
@@ -136,6 +143,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
         geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of array nesting than LineString format
 
         $scope.logs.push(geometry.coordinates[0]);
+        console.log(geometry.coordinates[0]);
     }
 
     //////////// HELPER FUNCTIONS ////////////
@@ -188,6 +196,178 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', func
     function updateCurrentMapDimensions() { 
         MAP_WIDTH = mapElement.offsetWidth;
         MAP_HEIGHT = mapElement.offsetHeight;
+    }
+
+//////////////////////////////////////////////////////////////////////
+
+//////////// PART 2 - ADDITIONAL FEATURES ////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+
+    $scope.areMarkerClustersEnabled = true;
+    var placeMap = {}; //this hashmap used to store which places we have already added to map, to prevent duplicate places being added
+
+    $scope.toggleMarkerClustering = function() {
+        $scope.areMarkerClustersEnabled = !$scope.areMarkerClustersEnabled;
+        createMarkers();
+    };
+
+    $scope.createMarkers = function() {
+        createMarkers();
+    };
+
+    $scope.removeNonenclosedMarkers = function() {
+        var index = 0;
+
+        while (index < $scope.markers.length) {
+            var marker = $scope.markers[index];
+            var isMarkerInsideShape = checkIfMarkerEnclosed(marker);
+
+            if (isMarkerInsideShape) {
+                index++;
+            } else {
+                $scope.markers.splice(index, 1);
+            }
+        }
+    };
+
+
+    function checkIfMarkerEnclosed(marker) {
+        var marker = marker;
+        var long = marker.lng;
+        var lat = marker.lat;
+
+        for(var z=0; z<$scope.geojson.data.features.length; z++) {
+
+            var polygon = $scope.geojson.data.features[z].geometry.coordinates[0];
+
+            var firstPoint = polygon[0];
+            polygon.push(firstPoint);
+
+            var curLatStatus;
+
+            if((polygon[0][1]) < lat) curLatStatus = -1;
+            else curLatStatus = 1;
+
+            var latIntersections = new Array();
+            var prevLatStatus = curLatStatus;
+
+            for(var i=0; i<polygon.length; i++) {
+                prevLatStatus = curLatStatus;
+                var current = polygon[i];
+                var curLat = current[1];
+                if (curLat < lat) {
+                    curLatStatus = -1;
+                } else {
+                    curLatStatus = 1;
+                }
+                if (curLatStatus != prevLatStatus) latIntersections.push(i);
+            }
+
+            var longAtLatIntArr = new Array();
+
+            for(var i=0; i<latIntersections.length; i++) {
+                var index = latIntersections[i];
+                var latInt = polygon[index];
+                longAtLatIntArr.push(latInt[0]);
+            }
+
+            longAtLatIntArr.push(long);
+            longAtLatIntArr = longAtLatIntArr.sort();
+            var indx;
+            
+            for(var i=0; i<longAtLatIntArr.length; i++) {
+                if(longAtLatIntArr[i] == long) indx = i;
+            }
+
+            var rem = indx % 2;
+
+            if(rem) return true; //inside
+        }
+
+        return false; //outside
+    };
+
+
+    function createMarkers() {
+
+        $scope.markers = new Array();
+        placeMap = {};
+
+        var westLongBound = $scope.bounds.southWest.lng;
+        var eastLongBound = $scope.bounds.northEast.lng;
+        var southLatBound = $scope.bounds.southWest.lat;
+        var northLatBound = $scope.bounds.northEast.lat;
+
+        var latDegCurView = northLatBound - southLatBound;
+        var longDegCurView = eastLongBound - westLongBound;
+
+        var INTERVAL = 3; // ((Interval+1)^2) will be the number of API calls made to get markers around a point
+
+        var longDiff = longDegCurView / INTERVAL;
+        var latDiff = latDegCurView / INTERVAL;
+
+        for(var i=0; i<=INTERVAL; i++) {
+            for(var j=0; j<=INTERVAL; j++) {
+
+                var long = westLongBound + (i * longDiff);
+                var lat = northLatBound - (j * latDiff);
+
+                getNearbyMarkers(lat, long);
+            }
+        }
+    };
+
+    function getNearbyMarkers(lat, long) {
+        var lat = parseFloat(lat).toFixed(5);
+        var long = parseFloat(long).toFixed(5);
+
+        var app_id = 'WXhZTK2FXbfgsSY1WWQE';
+        var app_code = 'ECiw79NUc9iM2Ou95f456g';
+
+        var url = "https://places.cit.api.here.com/places/v1/discover/explore";
+        var query = "?at=" + lat + ',' + long;
+        query += '&app_id=' + app_id;
+        query += '&app_code=' + app_code;
+        query += '&tf=plain&pretty=true';
+
+        url += query;
+
+        $http({
+            
+            method: 'GET',
+            url: url
+
+        }).then(function successCallback(response) {
+            var itemArr = response.data.results.items;
+            itemArr.forEach(function(item) {
+
+                var title = item.title;
+                if (placeMap[title]) return; //return if place has already added to map;
+                placeMap[title] = true;
+
+                var lt = item.position[0];
+                var lg = item.position[1];
+
+                if ($scope.areMarkerClustersEnabled) {
+                    $scope.markers.push({
+                        lng: lg,
+                        lat: lt,
+                        layer: 'clustered',
+                        draggable: false
+                    });
+                } else {
+                    $scope.markers.push({
+                        lng: lg,
+                        lat: lt,
+                        draggable: false
+                    });
+                }
+            });
+
+        }, function errorCallback(response) {
+            console.log('errors');
+        });
     }
 
 }]);

@@ -5,6 +5,8 @@
 
     <title>Map App</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
+    <link rel="stylesheet" href="./marker-cluster/MarkerCluster.css">
+    <link rel="stylesheet" href="./marker-cluster/MarkerCluster.Default.css">
     <style>
 
         body {
@@ -20,13 +22,15 @@
         }
 
         .large-buttons {
-            background: #000033;
+            background: green;
             color: white;
             position: relative;
             top: 7px;
             padding: 4px;
             border-radius: 5px;
             font-size: 2.1em;
+            margin-left: 4px;
+            margin-right: 4px;
         }
 
         .logs {
@@ -38,17 +42,24 @@
 </head>
 <body ng-controller="MapCtrl">
 
-    <leaflet bounds="bounds" center="center" geojson="geojson" defaults="defaults" id='map'>
+    <leaflet bounds="bounds" center="center" geojson="geojson" layers="layers" markers="markers" defaults="defaults" id='map'>
     </leaflet>
 
     <a class="large-buttons" ng-click="enableDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
     <a class="large-buttons" ng-click="disableDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
 
+    <a class="large-buttons" ng-click="removeNonenclosedMarkers()"> Apply </a>
+    
+    <a class="large-buttons" ng-click="createMarkers()"> Find Places </a>
+
+    <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="areMarkerClustersEnabled"> Disable Clusters </a>
+    <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="!areMarkerClustersEnabled"> Enable Clusters </a>
+
     <div class="logs" ng-repeat="log in logs"> {{log}} </div>
 
-
     <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.2.6/angular.min.js"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.4/angular.min.js"></script>
+    <script src="./marker-cluster/leaflet.markercluster.js"></script>
     <script src="./directives/angular-leaflet-directive.js"></script>
     <script src="./js/mapCtrl.js"></script>
 </body>
