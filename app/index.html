@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <title>Map App</title>
+    <title>Map Draw</title>
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css">
     <link rel="stylesheet" href="./marker-cluster/MarkerCluster.css">
     <link rel="stylesheet" href="./marker-cluster/MarkerCluster.Default.css">
@@ -26,11 +26,11 @@
             color: white;
             position: relative;
             top: 7px;
-            padding: 4px;
+            padding: 3px;
             border-radius: 5px;
-            font-size: 2.1em;
-            margin-left: 4px;
-            margin-right: 4px;
+            font-size: 1.2em;
+            margin-left: 3px;
+            margin-right: 3px;
         }
 
         .logs {
@@ -42,13 +42,13 @@
 </head>
 <body ng-controller="MapCtrl">
 
-    <leaflet bounds="bounds" center="center" geojson="geojson" layers="layers" markers="markers" defaults="defaults" id='map'>
+    <leaflet bounds="bounds" center="center" geojson="geojson" layers="layers" markers="markers" id='map'>
     </leaflet>
 
-    <a class="large-buttons" ng-click="enableDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
-    <a class="large-buttons" ng-click="disableDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
+    <a class="large-buttons" ng-click="toggleDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
+    <a class="large-buttons" ng-click="toggleDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
 
-    <a class="large-buttons" ng-click="removeNonenclosedMarkers()"> Apply </a>
+    <a class="large-buttons" ng-click="removeNonenclosedMarkers()"> Filter </a>
     
     <a class="large-buttons" ng-click="createMarkers()"> Find Places </a>
 
