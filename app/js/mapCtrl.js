@@ -5,8 +5,8 @@ var app = angular.module("MapApp", [
 app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$http', function($scope, leafletData, leafletBoundsHelpers, $http) {
     
     var startingBounds = leafletBoundsHelpers.createBoundsFromArray([
-        [ 47.62294, -122.3643 ], //coordinates for seattle
-        [ 47.5971, -122.29587 ]
+        [47.62294, -122.3643], //coordinates for seattle
+        [47.5971, -122.29587]
     ]); 
 
     var mapSettings = {
@@ -14,8 +14,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         center : {}, 
         geojson : { //initialize geojson feature collection (each of shapes we draw will be one feature)
             data: {
-              "type": "FeatureCollection",
-              "features": []
+                type: 'FeatureCollection',
+                features: []
             },
             style: { //style of the geojson LineString or Polygon
                 weight: 3,
@@ -63,15 +63,15 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 // we add points to this line on mouse move (or touch move)
 // we convert the line to a polygon on mouse up (or mouse up)
 
-    mapElement.addEventListener('touchstart', onMouseDown); 
+    mapElement.addEventListener('touchstart', onMouseDownOrTouchStart); 
     mapElement.addEventListener('touchmove', onTouchMove);
     mapElement.addEventListener('touchend', onTouchEnd);
 
-    $scope.$on("leafletDirectiveMap.map.mousedown", onMouseDown);
-    $scope.$on("leafletDirectiveMap.map.mousemove", onMouseMove);
-    $scope.$on("leafletDirectiveMap.map.mouseup", onMouseUp);
+    $scope.$on('leafletDirectiveMap.map.mousedown', onMouseDownOrTouchStart);
+    $scope.$on('leafletDirectiveMap.map.mousemove', onMouseMove);
+    $scope.$on('leafletDirectiveMap.map.mouseup', onMouseUp);
 
-    function onMouseDown() {
+    function onMouseDownOrTouchStart() {
         if (!$scope.isDrawingEnabled) return;
         if (isMouseClickedDown) return; //prevent weird errors in cases where we get 2 mouse downs without a mouse up in between
         
@@ -79,11 +79,11 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
         //create a new LineString feature and add it to map's feature collection
         var feature =  {
-            "type": "Feature",
-            "properties": {},
-            "geometry": {
-                "type": "LineString",
-                "coordinates": []
+            type: "Feature",
+            properties: {},
+            geometry: {
+                type: "LineString",
+                coordinates: []
             }
         };
 
@@ -119,10 +119,10 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
         if (x < 0 || x > MAP_WIDTH || y < 0 || y > MAP_HEIGHT) return; //return if user has moved finger off of the map
 
-        var lng = convertToLongitude(x);
-        var lat = convertToLatitude(y);
+        var longitude = convertToLongitude(x);
+        var latitude = convertToLatitude(y);
 
-        addBoundaryPoint(lng, lat); //add point to boundary line
+        addBoundaryPoint(longitude, latitude); //add point to boundary line
         
         $scope.$apply(); //needs apply because it is called from non-$scope event listener for mobile touches
         e.preventDefault(); //prevents page scrolling
@@ -133,8 +133,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         $scope.$apply();
     }
 
-    function addBoundaryPoint(lng, lat) { //adds one longitude, latitude pair to the geojson feature
-        var coordinatePair = [lng, lat];
+    function addBoundaryPoint(longitude, latitude) { //adds one longitude, latitude pair to the geojson feature
+        var coordinatePair = [longitude, latitude];
 
         var index = $scope.geojson.data.features.length - 1; //index of most recent feature
 
@@ -277,31 +277,31 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
     
     // More details about this algorithm here:   https://en.wikipedia.org/wiki/Point_in_polygon
 
-        var long = marker.lng;
-        var lat = marker.lat;
+        var longitude = marker.lng;
+        var latitude = marker.lat;
 
         // loop through polygons, checking one at a time
-        for (var i=0; i<$scope.geojson.data.features.length; i++) {
+        for (var i = 0; i < $scope.geojson.data.features.length; i++) {
             var polygon = $scope.geojson.data.features[i].geometry.coordinates[0]; 
             
             if (polygon.length < 1) continue; // skip iteration if polygon is empty 
 
             // step 1
-            var latIntersections = findLatIntersections(polygon, lat);
+            var latIntersections = findLatIntersections(polygon, latitude);
             
             //step 2
-            var longAtLatIntArr = new Array();
+            var longAtLatIntArr = [];
 
             latIntersections.forEach(function(latInt) {
                 var pointBefore = polygon[latInt[0]]; 
                 var pointAfter = polygon[latInt[1]];
                 
-                var longAtLatInt = findLongAtLatInt(pointBefore, pointAfter, lat); 
+                var longAtLatInt = findLongAtLatInt(pointBefore, pointAfter, latitude); 
                 longAtLatIntArr.push(longAtLatInt); 
             });
 
             // step 3
-            var index = compareLongitudes(long, longAtLatIntArr); 
+            var index = compareLongitudes(longitude, longAtLatIntArr); 
 
             // step 4
             var isMarkerInsideShape = index % 2; // will be 0 or 1. 1 means inside, 0 means outside
@@ -314,54 +314,55 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
     function compareLongitudes(value, arr) {
         //find where a value would sit in an array if we added it to the array and then sorted it
+        arr = arr.slice(); //copy array
         arr.push(value);
         var sortedArr = arr.sort();
         var index;
         
-        for (var i=0; i<sortedArr.length; i++) {
-            if (sortedArr[i] == value) index = i;
+        for (var i = 0; i < sortedArr.length; i++) {
+            if (sortedArr[i] === value) index = i;
         }
         
         return index;
     }
 
-    function findLatIntersections(polygon, lat) { 
+    function findLatIntersections(polygon, latitude) { 
         //as we iterate along the edges of one polygon, find all edges that cross the latitude of our marker
 
         var curLatStatus; //will either be -1 or 1
         // -1 means latitude of current point in shape is less than the latitude of marker in question
         // 1 means greater than 
 
-        if ((polygon[0][1]) < lat) curLatStatus = -1; 
+        if ((polygon[0][1]) < latitude) curLatStatus = -1; 
         else curLatStatus = 1;
 
-        var latIntersections = new Array();
+        var latIntersections = [];
         var prevLatStatus = curLatStatus;
 
-        for (var i=0; i<polygon.length; i++) {
+        for (var i = 0; i < polygon.length; i++) {
             prevLatStatus = curLatStatus;
             var curLat = polygon[i][1];
-            if (curLat < lat) {
+            if (curLat < latitude) {
                 curLatStatus = -1;
             } else {
                 curLatStatus = 1;
             }
             //if latitude of marker crossed, add index of point before latitude crossed and index of point after
-            if (curLatStatus != prevLatStatus) latIntersections.push([i-1, i]); 
+            if (curLatStatus !== prevLatStatus) latIntersections.push([i - 1, i]); 
         }
 
         return latIntersections;
     }
 
-    function findLongAtLatInt (pointA, pointB, latitude) {
+    function findLongAtLatInt(pointA, pointB, latitude) {
         // need to find the exact longitude where the line between two points meets a latitude line
         var longitude; 
 
-        var rise = Number(pointB[1] - pointA[1]);
-        var run = Number(pointB[0] - pointA[0]);
+        var rise = pointB[1] - pointA[1];
+        var run = pointB[0] - pointA[0];
         
         // make sure we don't calculate slope as undefined
-        if (run == 0) { 
+        if (run === 0) { 
             longitude = pointA[0];
             return longitude; 
         }
@@ -369,7 +370,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         var slope = rise / run;
         var constant = pointA[1];
         
-        var longDiff = Number((latitude - constant)/(slope));
+        var longDiff = (latitude - constant) / slope;
         var longitude = pointA[0] + longDiff;
 
         return longitude;
@@ -383,7 +384,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         //the only free API I could find returns 20 places which are nearest to one point
         //so we will make the call on multiple evenly spaced points between the current bounds of our map
 
-        $scope.markers = new Array();
+        $scope.markers = [];
         placesAddedToMap = {}; //reset object
 
         var westLongBound = $scope.bounds.southWest.lng;
@@ -399,37 +400,35 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         var longDiff = longDegCurView / INTERVAL;
         var latDiff = latDegCurView / INTERVAL;
 
-        for(var i=0; i<=INTERVAL; i++) {
-            for(var j=0; j<=INTERVAL; j++) {
+        for (var i = 0; i <= INTERVAL; i++) {
+            for (var j = 0; j <= INTERVAL; j++) {
 
-                var long = westLongBound + (i * longDiff);
-                var lat = northLatBound - (j * latDiff);
+                var longitude = westLongBound + (i * longDiff);
+                var latitude = northLatBound - (j * latDiff);
 
-                getNearbyPlacesFromAPI(lat, long);
+                getNearbyPlacesFromAPI(latitude, longitude);
             }
         }
     }
 
-    function getNearbyPlacesFromAPI(lat, long) {
-        var lat = parseFloat(lat).toFixed(5);
-        var long = parseFloat(long).toFixed(5);
+    function getNearbyPlacesFromAPI(latitude, longitude) {
+        var latitude = parseFloat(latitude).toFixed(5);
+        var longitude = parseFloat(longitude).toFixed(5);
 
-        var app_id = 'WXhZTK2FXbfgsSY1WWQE';
-        var app_code = 'ECiw79NUc9iM2Ou95f456g';
+        var appId = 'WXhZTK2FXbfgsSY1WWQE';
+        var appCode = 'ECiw79NUc9iM2Ou95f456g';
 
         var url = "https://places.cit.api.here.com/places/v1/discover/explore";
-        var query = "?at=" + lat + ',' + long;
-        query += '&app_id=' + app_id;
-        query += '&app_code=' + app_code;
+        var query = "?at=" + latitude + ',' + longitude;
+        query += '&app_id=' + appId;
+        query += '&app_code=' + appCode;
         query += '&tf=plain&pretty=true';
 
         url += query;
 
         $http({
-            
             method: 'GET',
             url: url
-
         }).then(addItemsToMapCB, errorCB);
     }
 
@@ -441,20 +440,20 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
             if (placesAddedToMap[title]) return; //return if place has already been added to map;
             placesAddedToMap[title] = true;
 
-            var lt = item.position[0];
-            var lg = item.position[1];
+            var latitude = item.position[0];
+            var longitude = item.position[1];
 
             if ($scope.areMarkerClustersEnabled) {
                 $scope.markers.push({
-                    lng: lg,
-                    lat: lt,
+                    lng: longitude,
+                    lat: latitude,
                     layer: 'clustered',
                     draggable: false
                 });
             } else {
                 $scope.markers.push({
-                    lng: lg,
-                    lat: lt,
+                    lng: longitude,
+                    lat: latitude,
                     draggable: false
                 });
             }
