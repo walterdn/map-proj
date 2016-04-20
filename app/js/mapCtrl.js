@@ -1,5 +1,5 @@
-var app = angular.module("MapApp", [
-    "leaflet-directive"
+var app = angular.module('MapApp', [
+    'leaflet-directive'
 ]);
 
 app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$http', function($scope, leafletData, leafletBoundsHelpers, $http) {
@@ -47,7 +47,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
 /////////   GLOBAL VARIABLES   ///////// 
    
-    $scope.coordinatesLog = new Array(); // used to log coordinates of the shapes we draw to the screen
+    $scope.coordinatesLog = []; // used to log coordinates of the shapes we draw to the screen
     $scope.isDrawingEnabled = false;
     var isMouseClickedDown = false;
 
@@ -79,10 +79,10 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
         //create a new LineString feature and add it to map's feature collection
         var feature =  {
-            type: "Feature",
+            type: 'Feature',
             properties: {},
             geometry: {
-                type: "LineString",
+                type: 'LineString',
                 coordinates: []
             }
         };
@@ -149,7 +149,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         //polygon will autocomplete visually even if we don't but we need this point in array for future calculations
         if (geometry.coordinates.length > 0) geometry.coordinates.push(geometry.coordinates[0]); 
 
-        geometry.type = "Polygon";
+        geometry.type = 'Polygon';
         geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of array nesting than LineString format
 
         $scope.coordinatesLog.push(geometry.coordinates[0]);
@@ -268,112 +268,15 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
     }
 
     function checkIfMarkerEnclosed(marker) {
-    // To find if a marker is enclosed in a polygon, we will use the following steps:
-    
-    // 1 - find all edges of the polygon which intersect the latitude line of the marker
-    // 2 - find the exact points on the edges which have the same latitude as our marker (we will call these points lat intersections)
-    // 3 - compare longitudes at lat intersections to longitude of the marker
-    // 4 - if the number of intersections coming before our point is odd, then our point is inside the shape. if even, then point is outside.
-    
-    // More details about this algorithm here:   https://en.wikipedia.org/wiki/Point_in_polygon
+        var polygons = [];
 
-        var longitude = marker.lng;
-        var latitude = marker.lat;
-
-        // loop through polygons, checking one at a time
+        // get all polygons in one simple array
         for (var i = 0; i < $scope.geojson.data.features.length; i++) {
             var polygon = $scope.geojson.data.features[i].geometry.coordinates[0]; 
-            
-            if (polygon.length < 1) continue; // skip iteration if polygon is empty 
-
-            // step 1
-            var latIntersections = findLatIntersections(polygon, latitude);
-            
-            //step 2
-            var longAtLatIntArr = [];
-
-            latIntersections.forEach(function(latInt) {
-                var pointBefore = polygon[latInt[0]]; 
-                var pointAfter = polygon[latInt[1]];
-                
-                var longAtLatInt = findLongAtLatInt(pointBefore, pointAfter, latitude); 
-                longAtLatIntArr.push(longAtLatInt); 
-            });
-
-            // step 3
-            var index = compareLongitudes(longitude, longAtLatIntArr); 
-
-            // step 4
-            var isMarkerInsideShape = index % 2; // will be 0 or 1. 1 means inside, 0 means outside
-
-            if (isMarkerInsideShape) return true; //marker is inside polygon of current loop iteration
-        }
-
-        return false; //marker is outside of all polygons
-    }
-
-    function compareLongitudes(value, arr) {
-        //find where a value would sit in an array if we added it to the array and then sorted it
-        arr = arr.slice(); //copy array
-        arr.push(value);
-        var sortedArr = arr.sort();
-        var index;
-        
-        for (var i = 0; i < sortedArr.length; i++) {
-            if (sortedArr[i] === value) index = i;
+            polygons.push(polygon);
         }
         
-        return index;
-    }
-
-    function findLatIntersections(polygon, latitude) { 
-        //as we iterate along the edges of one polygon, find all edges that cross the latitude of our marker
-
-        var curLatStatus; //will either be -1 or 1
-        // -1 means latitude of current point in shape is less than the latitude of marker in question
-        // 1 means greater than 
-
-        if ((polygon[0][1]) < latitude) curLatStatus = -1; 
-        else curLatStatus = 1;
-
-        var latIntersections = [];
-        var prevLatStatus = curLatStatus;
-
-        for (var i = 0; i < polygon.length; i++) {
-            prevLatStatus = curLatStatus;
-            var curLat = polygon[i][1];
-            if (curLat < latitude) {
-                curLatStatus = -1;
-            } else {
-                curLatStatus = 1;
-            }
-            //if latitude of marker crossed, add index of point before latitude crossed and index of point after
-            if (curLatStatus !== prevLatStatus) latIntersections.push([i - 1, i]); 
-        }
-
-        return latIntersections;
-    }
-
-    function findLongAtLatInt(pointA, pointB, latitude) {
-        // need to find the exact longitude where the line between two points meets a latitude line
-        var longitude; 
-
-        var rise = pointB[1] - pointA[1];
-        var run = pointB[0] - pointA[0];
-        
-        // make sure we don't calculate slope as undefined
-        if (run === 0) { 
-            longitude = pointA[0];
-            return longitude; 
-        }
-
-        var slope = rise / run;
-        var constant = pointA[1];
-        
-        var longDiff = (latitude - constant) / slope;
-        var longitude = pointA[0] + longDiff;
-
-        return longitude;
+        return checkIfMarkerEnclosedByPolygons(polygons, marker); // in check_if_marker_enclosed_by_polygons.js module
     }
 
 ////////////////////////////////////////////////////// 
@@ -418,8 +321,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         var appId = 'WXhZTK2FXbfgsSY1WWQE';
         var appCode = 'ECiw79NUc9iM2Ou95f456g';
 
-        var url = "https://places.cit.api.here.com/places/v1/discover/explore";
-        var query = "?at=" + latitude + ',' + longitude;
+        var url = 'https://places.cit.api.here.com/places/v1/discover/explore';
+        var query = '?at=' + latitude + ',' + longitude;
         query += '&app_id=' + appId;
         query += '&app_code=' + appCode;
         query += '&tf=plain&pretty=true';
