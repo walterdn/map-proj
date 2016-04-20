@@ -55,7 +55,7 @@
     <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="areMarkerClustersEnabled"> Disable Clusters </a>
     <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="!areMarkerClustersEnabled"> Enable Clusters </a>
 
-    <div class="logs" ng-repeat="log in logs"> {{log}} </div>
+    <div class="logs" ng-repeat="log in coordinatesLog"> {{log}} </div>
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.4/angular.min.js"></script>
