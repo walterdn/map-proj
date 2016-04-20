@@ -22,20 +22,27 @@
         }
 
         .large-buttons {
+            display: flex;
+            justify-content: center;
             background: green;
             color: white;
             position: relative;
             top: 7px;
             padding: 3px;
             border-radius: 5px;
-            font-size: 1.2em;
+            font-size: 22px;
             margin-left: 3px;
             margin-right: 3px;
+            flex-grow: 1;
         }
 
         .logs {
             font-size: .6em;
             margin: 15px;
+        }
+
+        .btns-container {
+            display: flex;
         }
 
     </style>    
@@ -45,15 +52,14 @@
     <leaflet bounds="bounds" center="center" geojson="geojson" layers="layers" markers="markers" id='map'>
     </leaflet>
 
-    <a class="large-buttons" ng-click="toggleDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
-    <a class="large-buttons" ng-click="toggleDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
-
-    <a class="large-buttons" ng-click="removeNonenclosedMarkers()"> Filter </a>
-    
-    <a class="large-buttons" ng-click="createMarkers()"> Find Places </a>
-
-    <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="areMarkerClustersEnabled"> Disable Clusters </a>
-    <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="!areMarkerClustersEnabled"> Enable Clusters </a>
+    <section class="btns-container">
+        <a class="large-buttons" ng-click="toggleDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
+        <a class="large-buttons" ng-click="toggleDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
+        <a class="large-buttons" ng-click="removeNonenclosedMarkers()"> Filter </a>
+        <a class="large-buttons" ng-click="createMarkers()"> Find Places </a>
+        <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="areMarkerClustersEnabled"> Disable Clusters </a>
+        <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="!areMarkerClustersEnabled"> Enable Clusters </a>
+    </section>
 
     <div class="logs" ng-repeat="log in coordinatesLog"> {{log}} </div>
 
