@@ -15,18 +15,20 @@ var checkIfMarkerEnclosedByPolygons = (function() {
 
     var findLatIntersections = function(polygon, latitude) { 
         // as we iterate along the edges of one polygon, find all edges that cross the latitude of our marker
-
+        // (really we are interating over points, and we will store edges as arrays of two points)
+        
+        var prevLatStatus; 
         var curLatStatus; // will either be -1 or 1
         // -1 means latitude of current point in shape is less than the latitude of marker in question
         // 1 means greater than 
 
+        // initialize value so that prevLatStatus will have something to grab on first iteration of loop
         if ((polygon[0][1]) < latitude) curLatStatus = -1; 
         else curLatStatus = 1;
 
-        var latIntersections = new Array();
-        var prevLatStatus = curLatStatus;
+        var latIntersections = []; //the return value
 
-        for (var i = 0; i < polygon.length; i++) {
+        for (var i = 1; i < polygon.length; i++) {
             prevLatStatus = curLatStatus;
             var curLat = polygon[i][1];
             if (curLat < latitude) {
@@ -34,7 +36,7 @@ var checkIfMarkerEnclosedByPolygons = (function() {
             } else {
                 curLatStatus = 1;
             }
-            //if latitude of marker crossed, add index of point before latitude crossed and index of point after
+            //if latitude of marker crossed, store an array with index of point before latitude crossed and index of point after
             if (curLatStatus !== prevLatStatus) {
                 latIntersections.push([i-1, i]);
             }
@@ -87,9 +89,9 @@ var checkIfMarkerEnclosedByPolygons = (function() {
             // step 1
             var latIntersections = findLatIntersections(polygon, latitude);
             
-            //step 2
-            var longAtLatIntArr = new Array();
-
+            // step 2
+            var longAtLatIntArr = []; 
+            // only need to store longitude of each point for our algorithm (they all have the same latitude anyway, the latitude of marker)
             latIntersections.forEach(function(latInt) {
                 var pointBefore = polygon[latInt[0]]; 
                 var pointAfter = polygon[latInt[1]];
@@ -100,6 +102,8 @@ var checkIfMarkerEnclosedByPolygons = (function() {
 
             // step 3
             var index = compareLongitudes(longitude, longAtLatIntArr); 
+            // index of marker's longitude in a sorted array which contains both the marker's longitude
+            // and also the longitudes of all points on polygon's perimeter which have the same latitude as our marker
 
             // step 4
             var isMarkerInsideShape = index % 2; // will be 0 or 1. 1 means inside, 0 means outside

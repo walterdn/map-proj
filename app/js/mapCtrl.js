@@ -170,8 +170,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
             map.doubleClickZoom.disable();
         });
 
-        $scope.geojson.data.features = new Array(); //resets the geojson features
-        $scope.coordinatesLog = new Array(); 
+        $scope.geojson.data.features = []; //resets the geojson features
+        $scope.coordinatesLog = []; 
         $scope.isDrawingEnabled = true;
     }
 
@@ -218,7 +218,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 /////////  PLACING AND FILTERING MAP MARKERS ///////// 
 ////////////////////////////////////////////////////// 
 
-    $scope.markers = new Array();
+    $scope.markers = [];
     $scope.areMarkerClustersEnabled = true;
     var placesAddedToMap = {}; //this hashmap used to store which places we have already added to map, to prevent duplicate places being added
 
