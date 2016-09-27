@@ -21,19 +21,37 @@
             width: 100vw;
         }
 
+        .row-btns {
+            display: flex;
+            width: 100%;
+        }
+
         .large-buttons {
             display: flex;
             justify-content: center;
-            background: green;
             color: white;
             position: relative;
-            top: 7px;
-            padding: 3px;
-            border-radius: 5px;
-            font-size: 22px;
-            margin-left: 3px;
-            margin-right: 3px;
+            padding: 3px 0 3px 0;
+            border-radius: 1px;
+            font-size: 1.25em;
+            font-weight: 600;
+            margin: 2px 5px 2px 5px;
             flex-grow: 1;
+            transition: all .4s;
+            box-shadow: 3px 3px 3px #BCBCBC;
+            letter-spacing: .5px;
+        }
+
+        .green {
+            background: #00A657;
+        }
+
+        .red {
+            background: #F46767;
+        }
+
+        .teal {
+            background: #35B592;
         }
 
         .logs {
@@ -41,27 +59,41 @@
             margin: 15px;
         }
 
-        .btns-container {
-            display: flex;
+        .label {
+            color: #323437;
+            margin: 2px 5px 2px 5px;
+            font-size: 1.4em;
+            font-weight: 600;
         }
-
-    </style>    
+    </style>
 </head>
 <body ng-controller="MapCtrl">
 
     <leaflet bounds="bounds" center="center" geojson="geojson" layers="layers" markers="markers" id='map'>
     </leaflet>
 
-    <section class="btns-container">
-        <a class="large-buttons" ng-click="toggleDrawing()" ng-if="!isDrawingEnabled"> Enable Drawing </a>
-        <a class="large-buttons" ng-click="toggleDrawing()" ng-if="isDrawingEnabled"> Disable Drawing </a>
-        <a class="large-buttons" ng-click="removeNonenclosedMarkers()"> Filter </a>
-        <a class="large-buttons" ng-click="createMarkers()"> Find Places </a>
-        <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="areMarkerClustersEnabled"> Disable Clusters </a>
-        <a class="large-buttons" ng-click="toggleMarkerClustering()" ng-if="!areMarkerClustersEnabled"> Enable Clusters </a>
+    <div class="label"> Actions </div>
+    <section class="row-btns">
+        <a class="large-buttons teal" ng-click="createMarkers()"> Find Places </a>
+        <a class="large-buttons teal" ng-click="removeNonenclosedMarkers()"> Filter {{markers.length}} Markers </a>
+        <a class="large-buttons teal" ng-click="removeDrawnShapes()"> Clear {{geojson.data.features.length}} Shapes </a>
     </section>
 
-    <div class="logs" ng-repeat="log in coordinatesLog"> {{log}} </div>
+    <div class="label"> Settings </div>
+    <section class="row-btns">
+        <a class="large-buttons",
+            ng-click="toggleDrawing()",
+            ng-class="{ 'green' : !isDrawingEnabled, 'red' : isDrawingEnabled }"> {{enableOrDisableDrawing}} Drawing </a>
+        <a class="large-buttons",
+            ng-click="toggleMarkerClustering()",
+            ng-class="{ 'green' : !areMarkerClustersEnabled, 'red' : areMarkerClustersEnabled }"> {{enableOrDisableClusters}} Marker Clusters </a>
+        <a class="large-buttons",
+            ng-click="toggleSmoothing()",
+            ng-class="{ 'green' : !isSmoothingEnabled, 'red' : isSmoothingEnabled }"> {{enableOrDisableSmoothing}} Smoothing </a>
+    </section>
+
+
+    <div class="logs" ng-repeat="log in coordinatesLog" ng-if="showingCoordinateLogs"> {{log}} </div>
 
     <script src="http://cdn.leafletjs.com/leaflet-0.7.1/leaflet.js"></script>
     <script src="http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.4/angular.min.js"></script>

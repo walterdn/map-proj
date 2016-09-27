@@ -19,9 +19,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
             },
             style: { //style of the geojson LineString or Polygon
                 weight: 3,
-                opacity: .8,
-                color: '#2aa22a',
-                dashArray: '4',
+                opacity: .9,
+                color: '#00A657',
                 fillOpacity: .25
             }
         },
@@ -48,7 +47,13 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 /////////   GLOBAL VARIABLES   ///////// 
    
     $scope.coordinatesLog = []; // used to log coordinates of the shapes we draw to the screen
+    $scope.showingCoordinateLogs = false;
     $scope.isDrawingEnabled = false;
+    $scope.enableOrDisableDrawing = 'Enable'
+    $scope.enableOrDisableClusters = 'Enable'
+    $scope.enableOrDisableSmoothing = 'Enable';
+    $scope.isSmoothingEnabled = false;
+
     var isMouseClickedDown = false;
 
     var mapElement = document.getElementById('map');
@@ -76,6 +81,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         if (isMouseClickedDown) return; //prevent weird errors in cases where we get 2 mouse downs without a mouse up in between
         
         isMouseClickedDown = true;
+        isFirstMove = true;
 
         //create a new LineString feature and add it to map's feature collection
         var feature =  {
@@ -90,12 +96,29 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         $scope.geojson.data.features.push(feature);
     }
 
+    var lastLng, lastLat;
+    var isFirstMove = true;
+
     function onMouseMove(event, args) { //if mouse click held down and drawing enabled, then add mouse coordinates to geojson boundary
         if (!$scope.isDrawingEnabled || !isMouseClickedDown) return; 
 
         var mouseCoordinates = args.leafletEvent.latlng;
         var lng = mouseCoordinates.lng;
         var lat = mouseCoordinates.lat;
+
+        if (isFirstMove) {
+            lastLng = lng;
+            lastLat = lat;
+            isFirstMove = false;
+        }
+
+        if ($scope.isSmoothingEnabled) {
+            var distanceCurrentToLast = Math.sqrt(((lng - lastLng) * (lng - lastLng)) + ((lat - lastLat) * (lat - lastLat)));
+            if (distanceCurrentToLast < 0.0015) return;
+        }
+
+        lastLng = lng;
+        lastLat = lat;
 
         addBoundaryPoint(lng, lat);
     }
@@ -106,6 +129,9 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         isMouseClickedDown = false;
         finishShape(); //converts feature from line string to polygon
     }
+
+    var lastX = 0;
+    var lastY = 0;
 
     function onTouchMove(e) { 
     //for mouse events, the map can provide us the latitude and longitude of our mouse pointer
@@ -143,20 +169,37 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
     function finishShape() { //converts feature from line string to polygon
         var index = $scope.geojson.data.features.length - 1; //index of current feature
+
         var geometry = $scope.geojson.data.features[index].geometry;
+
+        // don't add tiny little shapes (normally just straight lines)
+        if (!$scope.isSmoothingEnabled && geometry.coordinates.length < 8) {
+            $scope.geojson.data.features.pop();
+            return;
+        }
 
         //add copy of first point as the last point
         //polygon will autocomplete visually even if we don't but we need this point in array for future calculations
-        if (geometry.coordinates.length > 0) geometry.coordinates.push(geometry.coordinates[0]); 
+        geometry.coordinates.push(geometry.coordinates[0]);
+
+        alert('Polygon drawn with ' + geometry.coordinates.length + ' points.')
 
         geometry.type = 'Polygon';
         geometry.coordinates = [geometry.coordinates]; //Polygon format requires one more level of array nesting than LineString format
 
         $scope.coordinatesLog.push(geometry.coordinates[0]);
-        console.log(geometry.coordinates[0]);
     }
 
 //////////// HELPER FUNCTIONS ////////////
+
+    $scope.toggleSmoothing = function() {
+        $scope.isSmoothingEnabled = !$scope.isSmoothingEnabled;
+        if ($scope.isSmoothingEnabled) {
+            $scope.enableOrDisableSmoothing = 'Disable';
+        } else {
+            $scope.enableOrDisableSmoothing = 'Enable';
+        }
+    }
 
     $scope.toggleDrawing = function() {
         if ($scope.isDrawingEnabled) disableDrawing();
@@ -170,9 +213,9 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
             map.doubleClickZoom.disable();
         });
 
-        $scope.geojson.data.features = []; //resets the geojson features
         $scope.coordinatesLog = []; 
         $scope.isDrawingEnabled = true;
+        $scope.enableOrDisableDrawing = 'Disable'
     }
 
     function disableDrawing() { //enable map panning/dragging and flip boolean
@@ -182,6 +225,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
             map.doubleClickZoom.enable();
         });
         $scope.isDrawingEnabled = false;
+        $scope.enableOrDisableDrawing = 'Enable'
     }
 
     function convertToLongitude(x) { //converts X position of a touchevent to longitude
@@ -219,7 +263,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 ////////////////////////////////////////////////////// 
 
     $scope.markers = [];
-    $scope.areMarkerClustersEnabled = true;
+    $scope.areMarkerClustersEnabled = false;
     var placesAddedToMap = {}; //this hashmap used to store which places we have already added to map, to prevent duplicate places being added
 
 ///////// CONTROLLER FUNCTIONS ///////// 
@@ -232,15 +276,22 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         removeNonenclosedMarkers();
     };
 
+    $scope.removeDrawnShapes = function() {
+        $scope.geojson.data.features = []
+    }
+
+
     $scope.toggleMarkerClustering = function() {
         $scope.areMarkerClustersEnabled = !$scope.areMarkerClustersEnabled;
 
         // probably a more elegant way of doing this, but I experimented with a few other options and this was only one I could get to work
         if ($scope.areMarkerClustersEnabled) {
+            $scope.enableOrDisableClusters = 'Disable'
             $scope.markers.forEach(function(marker) {
                 marker.layer = 'clustered';
             });
         } else {
+            $scope.enableOrDisableClusters = 'Enable'
             $scope.markers.forEach(function(marker) {
                 delete marker.layer;
             });
@@ -253,6 +304,7 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
 
     function removeNonenclosedMarkers() {
         var index = 0;
+        var markersRemoved = 0;
 
         // loop through all markers, remove any marker not enclosed in one of user-drawn polygons
         while (index < $scope.markers.length) {
@@ -263,8 +315,11 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
                 index++;
             } else {
                 $scope.markers.splice(index, 1);
+                markersRemoved++;
             }
         }
+
+        alert('Removing ' + markersRemoved + ' non-enclosed markers.');
     }
 
     function checkIfMarkerEnclosed(marker) {
@@ -318,8 +373,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         var latitude = parseFloat(latitude).toFixed(5);
         var longitude = parseFloat(longitude).toFixed(5);
 
-        var appId = 'WXhZTK2FXbfgsSY1WWQE';
-        var appCode = 'ECiw79NUc9iM2Ou95f456g';
+        var appId = 'UwQDED8lv2jBFgivmSOG';
+        var appCode = 'XKQNiopSAVdI11CNSvTwzw';
 
         var url = 'https://places.cit.api.here.com/places/v1/discover/explore';
         var query = '?at=' + latitude + ',' + longitude;
