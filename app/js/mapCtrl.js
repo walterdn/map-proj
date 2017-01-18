@@ -373,8 +373,8 @@ app.controller('MapCtrl', ['$scope', 'leafletData', 'leafletBoundsHelpers', '$ht
         var latitude = parseFloat(latitude).toFixed(5);
         var longitude = parseFloat(longitude).toFixed(5);
 
-        var appId = 'UwQDED8lv2jBFgivmSOG';
-        var appCode = 'XKQNiopSAVdI11CNSvTwzw';
+        var appId = 'WqtYTjtfpwSA0M9C04ws';
+        var appCode = 'oN45BNLpBRlGTpJ6O-rENg';
 
         var url = 'https://places.cit.api.here.com/places/v1/discover/explore';
         var query = '?at=' + latitude + ',' + longitude;
